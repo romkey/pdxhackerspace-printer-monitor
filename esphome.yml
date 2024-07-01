@@ -5,6 +5,7 @@ esphome:
 esp32:
   variant: esp32s3
   board: seeed_xiao_esp32s3
+#  board: adafruit_matrixportal_esp32s3
   framework:
     type: arduino
     version: "latest"
@@ -16,10 +17,10 @@ logger:
 # Enable Home Assistant API
 api:
   encryption:
-    key: "REPLACE ME"
+    key: "inXg5f3CcwUp8TjcpSWZxZcyQ/uQ5ZZM2UEUSkr7Jho="
 
 ota:
-  password: "REPLACE ME"
+  password: "f6f794b4c1ec98b5df5e470492ae9040"
 
 wifi:
   ssid: !secret wifi_ssid
@@ -28,7 +29,7 @@ wifi:
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
     ssid: "Printer-Monitor Fallback Hotspot"
-    password: "REPLACE ME"
+    password: "dL4CC2eNYHF7"
 
 captive_portal:
 
@@ -54,16 +55,42 @@ esp32_camera_web_server:
     mode: snapshot
 
 i2c:
-  sda: 5
-  scl: 6
+  sda: 1
+  scl: 2
+
+spi:
+  miso_pin: GPIO7
+  mosi_pin: GPIO6
+  clk_pin: GPIO9
+
+uart:
+  id: serial0
+  tx_pin: GPIO44
+  rx_pin: GPIO43
+  baud_rate: 9600  
 
 display:
   - platform: ssd1306_i2c
     model: "SSD1306 128x64"
     address: 0x3C
+  - platform: ili9xxx
+    model: ili9341
+    cs_pin: GPIO3
+    dc_pin: GPIO5
+    reset_pin: GPIO4
 
 sensor:
-  - platform: bme680
+  - platform: pmsx003
+    type: PMSX003
+    uart_id: serial0
+    pm_1_0:
+      name: "Particulate Matter <1.0µm Concentration"
+    pm_2_5:
+      name: "Particulate Matter <2.5µm Concentration"
+    pm_10_0:
+      name: "Particulate Matter <10.0µm Concentration"  
+
+  - platform: bme680  
     temperature:
       name: "BME680 Temperature"
       oversampling: 16x
@@ -75,6 +102,17 @@ sensor:
       name: "BME680 Gas Resistance"
     address: 0x77
     update_interval: 60s
+
+# Fan tachyometer
+#https://esphome.io/components/sensor/pulse_counter.html
+#  - platform: pulse_counter
+#    pin: GPIOXX
+#    unit_of_measurement: 'rpm'
+#    name: 'Fan Speed'
+#    filters:
+#      - multiply: 0.06  # (60s/1000 pulses per kWh)
+
+
   - platform: uptime
     name: Uptime Sensor
     icon: "mdi:clock"
@@ -101,16 +139,31 @@ text_sensor:
     bssid:
       name: BSSID
     mac_address:
-      name:   MAC Address
+      name: MAC Address
     dns_address:
       name: DNS Servers
+
+# https://esphome.io/components/output/ledc
+output:
+  - platform: ledc
+    pin: GPIO12
+    id: fan_pwm
+
+# maybe helpful?
+# https://community.home-assistant.io/t/4-pin-pwm-fan-set-level-and-start-stop-with-esphome/325979
+
+# https://esphome.io/components/fan/speed
+fan:
+  - platform: speed
+    output: fan_pwm
+    name: "Case Fan"
 
 wled:
 
 light:
   - platform: fastled_clockless
     chipset: WS2812B
-    pin: GPIO4
+    pin: GPIO13
     num_leds: 64
     rgb_order: GRB
     id: leds
@@ -172,3 +225,4 @@ light:
           twinkle_probability: 5%
           progress_interval: 4ms
       - wled:
+
