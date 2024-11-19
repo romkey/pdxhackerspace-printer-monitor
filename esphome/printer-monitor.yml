@@ -1,0 +1,422 @@
+esphome:
+  project:
+    name: "pdxhackerspace.printer_monitor"
+    version: "0.4.0"
+  on_boot:
+    priority: 500
+    then:
+      - light.turn_on:
+          id: leds
+          red: 100%
+          green: 100%
+          blue: 100%
+  on_shutdown:
+    priority: 500
+    then:
+      - light.turn_off: leds
+
+# D11 is GPIO42
+# D12 is GPIO41
+# For info on how to use them see https://wiki.seeedstudio.com/xiao_esp32s3_pin_multiplexing/#for-sense-version
+
+packages:
+  wifi-diagnostics: github://romkey/esphome-lib/lib/wifi-diagnostics.yml@main
+  esp32-diagnostics: github://romkey/esphome-lib/lib/esp32.yml@main
+
+logger:
+
+api:
+  id: hass
+
+ota:
+  platform: esphome
+
+wifi:
+  id: wifi_id
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+    timezone: ${timezone}
+
+font:
+  - file: 'fonts/FantasqueSansMono-Regular.ttf'
+    id: font_small
+    size: 20
+  - file: 'fonts/FantasqueSansMono-Regular.ttf'
+    id: font_large
+    size: 80
+  - file: 'fonts/FantasqueSansMono-Regular.ttf'
+    id: font_xlarge
+    size: 180
+# https://community.home-assistant.io/t/az-touch-esp-example/383573/22
+  - file: 'fonts/MaterialIcons-Regular.ttf'
+    id: font_icons
+    size: 22
+    glyphs:
+#      - "\U000F0590" # cloudy
+#      - "\U000F0595" # partlycloudy
+#      - "\U000F0591" # fog      
+#      - "\U000F0592" # hail
+#      - "\U000F067E" # lightning-rainy
+#      - "\U000F0596" # pouring
+#      - "\U000F0597" # rainy
+#      - "\U000F0F36" # snowy
+#      - "\U000F067F" # snowy-rainy
+#      - "\U000F0599" # sunny
+#      - "\U000F0F33" # light-rain
+#      - "\U000F0F34" # flurries
+#      - "\U000F0598" # light-snow
+#      - "\U000F0F35" # freezing-drizzle
+#      - "\U000F0502" # television off
+#      - "\U000F0594" # star night
+#      - "\U000F1A4C" # night light
+#      - "\U000F1051" # led strip on
+#      - "\U000F18DD" # multiple ceiling lights filled
+#      - "\U000F0335" # light bulb filled
+#      - "\U000F0336" # light bulb outline
+#      - "\U000F12CF" # multiple lights off
+#      - "\U000F18DE" # multiple ceiling lights outline
+#      - "\U000F1253" # multiple bulbs filled
+#      - "\U000F1254" # multiple bulbs outline
+#      - "\U000F1A4B" # led strip off
+#      - "\U000F0503" # television on
+#      - "\U000F0395" # dashboard
+      - "\U0000E63E" # wifi
+      - "\U0000E648" # no-wifi
+  - file: 'fonts/MaterialIcons-Regular.ttf'
+    id: font_icons_small
+    size: 20
+    glyphs:
+      - "\U0000E63E" # wifi
+      - "\U0000E648" # no-wifi
+  - file: 'fonts/MaterialIcons-Regular.ttf'
+    id: font_icons_120pt
+    size: 120
+    glyphs:
+      - "\U0000E5CA" # check
+      - "\U0000E63E" # wifi
+      - "\U0000E648" # no-wifi
+  - file: 'fonts/MaterialIcons-Regular.ttf'
+    id: font_icons_200pt
+    size: 200
+    glyphs:
+      - "\U0000E63E" # wifi
+      - "\U0000E648" # no-wifi
+
+color:
+  - id: my_red
+    red: 100%
+    green: 0%
+    blue: 0%
+  - id: my_green
+    red: 0%
+    green: 100%
+    blue: 0%
+  - id: my_white
+    red: 100%
+    green: 100%
+    blue: 100%
+
+esp32_camera:
+  name: My Camera
+  external_clock:
+    pin: GPIO10
+    frequency: 20MHz
+  i2c_pins:
+    sda: GPIO40
+    scl: GPIO39
+  data_pins: [GPIO15, GPIO17, GPIO18, GPIO16, GPIO14, GPIO12, GPIO11, GPIO48]
+  vsync_pin: GPIO38
+  href_pin: GPIO47
+  pixel_clock_pin: GPIO13
+  resolution: 800x600
+  jpeg_quality: 10
+
+esp32_camera_web_server:
+  - port: 8080
+    mode: stream
+  - port: 8081
+    mode: snapshot
+
+i2c:
+  sda: 2
+  scl: 1
+
+spi:
+  miso_pin: GPIO7
+  mosi_pin: GPIO6
+  clk_pin: GPIO9
+
+uart:
+  id: serial0
+  tx_pin: GPIO43
+  rx_pin: GPIO44
+  baud_rate: 9600  
+
+sensor:
+  - platform: pmsx003
+    type: PMSX003
+    uart_id: serial0
+    pm_1_0:
+      name: "Particulate Matter <1.0µm Concentration"
+    pm_2_5:
+      name: "Particulate Matter <2.5µm Concentration"
+    pm_10_0:
+      name: "Particulate Matter <10.0µm Concentration"  
+
+  - platform: bme680  
+    temperature:
+      name: "BME680 Temperature"
+      oversampling: 16x
+      filters:
+        - offset: ${bme_temperature_offset}      
+    pressure:
+      name: "BME680 Pressure"
+    humidity:
+      name: "BME680 Humidity"
+    gas_resistance:
+      name: "BME680 Gas Resistance"
+    address: 0x76
+    update_interval: 60s
+
+  - platform: homeassistant
+    name: "Canonical Temperature"
+    id: canonical_temperature
+    entity_id: sensor.openweathermap_temperature
+
+# Fan tachyometer
+#https://esphome.io/components/sensor/pulse_counter.html
+#  - platform: pulse_counter
+#    pin: GPIOXX
+#    unit_of_measurement: 'rpm'
+#    name: 'Fan Speed'
+#    filters:
+#      - multiply: 0.06  # (60s/1000 pulses per kWh)
+
+  - platform: homeassistant
+    name: "Nozzle Size"
+    id: nozzle_size
+    entity_id: ${nozzle_sensor}
+  - platform: homeassistant
+    name: "Print Finish"
+    id: print_finish
+    entity_id: ${print_finish_sensor}
+  - platform: homeassistant
+    name: "Progress"
+    id: print_progress
+    entity_id: ${print_progress_sensor}
+  - platform: homeassistant
+    name: "Remaining time"
+    id: print_remaining_time
+    entity_id: ${ha_remaining_time}
+
+text_sensor:
+  - platform: homeassistant
+    name: "Weather condition"
+    id: canonical_condition
+    entity_id: sensor.openweathermap_condition  
+  - platform: homeassistant
+    name: "Material"
+    id: filament_material
+    entity_id: ${print_material_sensor}
+  - platform: homeassistant
+    name: "Filename"
+    id: print_filename
+    entity_id: ${print_filename_sensor}
+  - platform: homeassistant
+    name: "Printer Status"
+    id: print_status
+    entity_id: ${print_status_sensor}   
+    on_value:
+      then:
+        - lambda: |-
+            if(id(print_status).state == "attention") {
+              auto call = id(leds).turn_on();
+              call.set_brightness(1);
+              call.set_rgb(0xFF, 0, 0);
+              call.set_effect("fast pulse");
+              }
+            if(id(print_status).state == "ready") {
+              auto call = id(leds).turn_on();
+              call.set_brightness(1);
+              call.set_rgb(0, 0xFF, 0);
+              call.set_effect("slow pulse");
+              }
+            if(id(print_status).state == "idle")
+              id(leds).turn_off();
+
+# https://esphome.io/components/output/ledc
+output:
+  - platform: ledc
+    pin: GPIO42
+    id: fan_pwm
+
+# maybe helpful?
+# https://community.home-assistant.io/t/4-pin-pwm-fan-set-level-and-start-stop-with-esphome/325979
+
+# https://esphome.io/components/fan/speed
+fan:
+  - platform: speed
+    output: fan_pwm
+    name: "Case Fan"
+
+wled:
+
+light:
+  - platform: neopixelbus
+    id: leds
+    variant: ${led_variant}
+    pin: GPIO8
+    num_leds: ${led_count}
+    type: ${led_type}
+    default_transition_length: 0s
+    color_correct: [50%, 50%, 50%]
+    restore_mode: ALWAYS_ON
+    effects:
+      - pulse:
+          name: "fast pulse"
+          transition_length: 0.5s
+          update_interval: 0.1s
+          min_brightness: 0%
+          max_brightness: 100%
+      - pulse:
+          name: "slow pulse"
+          transition_length: 2s
+          update_interval: 0.1s
+          min_brightness: 0%
+          max_brightness: 100%
+      - addressable_fireworks:
+          name: Fireworks
+          update_interval: 32ms
+          spark_probability: 10%
+          use_random_color: false
+          fade_out_rate: 120
+      - strobe:
+          name: Strobe Effect With Custom Values
+          colors:
+            - state: true
+              brightness: 100%
+              red: 100%
+              green: 90%
+              blue: 0%
+              duration: 500ms
+            - state: false
+              duration: 250ms
+            - state: true
+              brightness: 100%
+              red: 0%
+              green: 100%
+              blue: 0%
+              duration: 500ms
+      - flicker:
+          name: Flicker Effect With Custom Values
+          alpha: 95%
+          intensity: 1.5%
+      - addressable_rainbow:
+          name: Rainbow Effect With Custom Values
+          speed: 10
+          width: 50
+      - addressable_color_wipe:
+          name: Color Wipe Effect With Custom Values
+          colors:
+            - red: 100%
+              green: 100%
+              blue: 100%
+              num_leds: 1
+            - red: 0%
+              green: 0%
+              blue: 0%
+              num_leds: 1
+          add_led_interval: 100ms
+          reverse: false
+      - addressable_twinkle:
+          name: Twinkle Effect With Custom Values
+          twinkle_probability: 5%
+          progress_interval: 4ms
+      - wled:
+
+display:
+  # https://esphome.io/components/display/ili9xxx
+  - platform: ili9xxx
+    id: my_display
+    model: "${display_model}"
+    dc_pin: 5
+    reset_pin: 4
+    cs_pin: 3
+    data_rate: 80MHz
+    rotation: ${display_rotation}
+    dimensions:
+      width: 480
+      height: 320
+    auto_clear_enabled: True
+    invert_colors: ${display_invert}
+    lambda: |-
+      if(!id(wifi_id).is_connected()) {
+        it.print(130, 70, id(font_icons_200pt), id(my_red), "\U0000E648");
+        return;
+        }
+
+      if(!id(hass).is_connected()) {
+        it.print(0, 100, id(font_large), id(my_red), "No HASS");
+        return;
+      }
+
+      auto row = 0;
+      auto time = id(homeassistant_time).now();
+
+      it.print(0, row, id(font_small), id(my_white), "${printer_name}");
+      it.printf(200, row, id(font_small), id(my_white), "%02d:%02d:%02d", time.hour, time.minute, time.second);
+      it.print(450, row, id(font_icons_small), id(my_white), "\U0000E63E");
+      row += 30;
+
+      if(id(print_status).state == "printing") {
+        if(id(print_remaining_time).state < 60)
+          it.printf(0, row, id(font_xlarge), id(my_white), "%d sec", (int)id(print_remaining_time).state);
+        else if(id(print_remaining_time).state < 60*60)
+          it.printf(0, row, id(font_xlarge), id(my_white), "%dm%d", (int)id(print_remaining_time).state / 60, (int) id(print_remaining_time).state % 60);
+        else
+          it.printf(0, row, id(font_xlarge), id(my_white), "%02d:%02d:%02d", id(print_remaining_time).state, (int)id(print_remaining_time).state / 60, (int) id(print_remaining_time).state % 60);
+
+        row += 140;
+        }
+      if(id(print_status).state == "finished") {
+        it.print(0, row, id(font_xlarge), id(my_white), "DONE");
+        row += 140;
+        }
+
+      it.printf(0, 240, id(font_large), id(my_white), "%s", id(filament_material).state.c_str());
+      it.printf(200, 240, id(font_large), id(my_white), "%0.2fmm", id(nozzle_size).state);
+
+button:
+  - platform: restart
+    name: "Restart"
+  - platform: template
+    name: "Turn off lights"
+    on_press:
+      light.turn_off:
+        id: leds
+  - platform: template
+    name: "Turn on lights"
+    on_press:
+      light.turn_on:
+        id: leds
+        effect: "slow pulse"
+        red: 0%
+        green: 100%
+        blue: 0%
+  - platform: template
+    name: "Alert!"
+    on_press:
+      light.turn_on:
+        id: leds
+        effect: "fast pulse"
+        red: 100%
+        green: 0%
+        blue: 0%
+  - platform: template
+    name: "Rainbow"
+    on_press:
+      light.turn_on:
+        id: leds
+        effect: addressable_rainbow

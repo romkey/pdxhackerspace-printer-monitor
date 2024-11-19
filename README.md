@@ -22,6 +22,20 @@ Versions 0.02 and 0.03 are both 81x35 mm.
 
 The board is intended to integrate with Home Assistant. ESPHome is the easiest way to build code for it. The repo contains an example ESPHome definition file at esphome.yml, which needs its display functionality fleshed out.
 
+## OV5640
+
+https://github.com/0015/ESP32-OV5640-AF
+
+
+## PrusaLink
+
+Status observed:
+- finished
+- idle
+- busy
+- attention
+- printing
+
 ## Roadmap
 
 Next hardware revision:
