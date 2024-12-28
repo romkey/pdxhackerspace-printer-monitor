@@ -340,20 +340,20 @@ display:
   # https://esphome.io/components/display/ili9xxx
   - platform: ili9xxx
     id: my_display
-#    model: "${display_model}"
-    model: ILI9488
+    model: "${display_model}"
+#    model: ILI9488
     dc_pin: 5
     reset_pin: 4
     cs_pin: 3
-    data_rate: 80MHz
-#    rotation: ${display_rotation}
-    rotation: 270
+    data_rate: 40MHz
+    rotation: ${display_rotation}
+#    rotation: 270
     dimensions:
       width: 480
       height: 320
     auto_clear_enabled: True
-#    invert_colors: ${display_invert}
-    invert_colors: False
+    invert_colors: ${display_invert}
+#    invert_colors: False
     lambda: |-
       if(!id(wifi_id).is_connected()) {
         it.print(130, 70, id(font_icons_200pt), id(my_red), "\U0000E648");
