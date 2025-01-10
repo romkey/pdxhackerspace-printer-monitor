@@ -130,8 +130,10 @@ esp32_camera:
   vsync_pin: GPIO38
   href_pin: GPIO47
   pixel_clock_pin: GPIO13
-  resolution: 800x600
-  jpeg_quality: 10
+  resolution: ${camera_resolution}
+  jpeg_quality: ${camera_jpeg_quality}
+  vertical_flip: ${camera_vertical_flip}
+  horizontal_mirror: ${camera_horizontal_mirror}
 
 esp32_camera_web_server:
   - port: 8080

@@ -14,9 +14,7 @@ The PCB is designed using KiCAD. Hardware revisions are stored in the hardware d
 
 You can [order this PCB from OSHPark](https://oshpark.com/shared_projects/bLoBvODi) but please don't order it. This project is under active albeit slow development. There will be a better version available soon.
 
-Versions 0.02 and 0.03 are both 81x35 mm.
-
-![PCB front](images/0.02-front.jpg) ![PCB back](images/0.02-back.jpg) 
+![PCB front](images/0.5.1-front.jpg) ![PCB back](images/0.5.2-back.jpg) 
 
 ## Software
 
@@ -36,13 +34,6 @@ Status observed:
 - attention
 - printing
 
-## Roadmap
 
-Next hardware revision:
-
-1. Center the Xiao ESP32S3 Sense camera module.
-2. Rework the footprint of the Xiao ESP32S3 to allow either surface mount or through hole soldering.
-3. Rework the SPI TFT connector to use a normal header block rather than the weird attempt at a cable connector it currently uses.
-4. Consider adding hardware to support a PWM fan for air filtration.
 
 
