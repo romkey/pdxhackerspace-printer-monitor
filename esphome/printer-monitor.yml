@@ -381,7 +381,7 @@ display:
         else if(id(print_remaining_time).state < 60*60)
           it.printf(0, row, id(font_xlarge), id(my_white), "%dm%d", (int)id(print_remaining_time).state / 60, (int) id(print_remaining_time).state % 60);
         else
-          it.printf(0, row, id(font_xlarge), id(my_white), "%02dh%02dm", (int)(id(print_remaining_time).state / (60*60), (int)id(print_remaining_time).state / 60));
+          it.printf(0, row, id(font_xlarge), id(my_white), "%02dh%02dm", (int)(id(print_remaining_time).state / (60*60)), (int)(id(print_remaining_time).state / 60));
 
         row += 140;
         }
