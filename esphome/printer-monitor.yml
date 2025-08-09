@@ -126,9 +126,7 @@ esp32_camera:
   external_clock:
     pin: GPIO10
     frequency: 20MHz
-  i2c_pins:
-    sda: GPIO40
-    scl: GPIO39
+  i2c_id: i2c_camera
   data_pins: [GPIO15, GPIO17, GPIO18, GPIO16, GPIO14, GPIO12, GPIO11, GPIO48]
   vsync_pin: GPIO38
   href_pin: GPIO47
@@ -145,8 +143,12 @@ esp32_camera_web_server:
     mode: snapshot
 
 i2c:
-  sda: 2
-  scl: 1
+  - id: i2c0
+    sda: 2
+    scl: 1
+  - id: i2c_camera
+    sda: GPIO40
+    scl: GPIO39
 
 spi:
   miso_pin: GPIO7
