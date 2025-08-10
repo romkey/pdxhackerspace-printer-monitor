@@ -376,12 +376,12 @@ display:
       auto row = 0;
       auto time = id(homeassistant_time).now();
 
-      it.print(0, row, id(font_small), id(my_white), "${printer_name}"); # info on top
+      it.print(0, row, id(font_small), id(my_white), "${printer_name}"); // info on top
       it.printf(200, row, id(font_small), id(my_white), "%02d:%02d:%02d", time.hour, time.minute, time.second);
       it.print(450, row, id(font_icons_small), id(my_white), "\U0000E63E");
       row += 30;
 
-      if(id(print_status).state == "printing") { # time remaining for print
+      if(id(print_status).state == "printing") { // time remaining for print
         if(id(print_remaining_time).state < 60) {
           it.printf(0, row, id(font_xxlarge), id(my_white), "%ds", (int)id(print_remaining_time).state);
           row += 140;
@@ -396,12 +396,12 @@ display:
           row += 180;
         }
       }
-      if(id(print_status).state == "finished") { # finished message
+      if(id(print_status).state == "finished") { // finished message
         it.print(0, row, id(font_xxlarge), id(my_white), "DONE");
         row += 140;
       }
 
-      it.printf(0, 240, id(font_large), id(my_white), "%s", id(filament_material).state.c_str()); # print job info
+      it.printf(0, 240, id(font_large), id(my_white), "%s", id(filament_material).state.c_str()); // print job info
       it.printf(200, 240, id(font_large), id(my_white), "%0.2fmm", id(nozzle_size).state);
 
 button:
