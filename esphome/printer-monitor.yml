@@ -389,10 +389,10 @@ display:
           it.printf(0, row, id(font_xxlarge), id(my_white), "%dm%ds", (int)id(print_remaining_time).state / 60, (int)id(print_remaining_time).state % 60);
           row += 140;
         } else if(id(print_remaining_time).state < 86400) {
-          it.printf(0, row, id(font_xlarge), id(my_white), "%dh%02dm", (int)(id(print_remaining_time).state / 3600), (int)((id(print_remaining_time).state % 3600) / 60));
+          it.printf(0, row, id(font_xlarge), id(my_white), "%dh%02dm", (int)(id(print_remaining_time).state / 3600), (int)(((int)id(print_remaining_time).state % 3600) / 60));
           row += 180;
         } else {
-          it.printf(0, row, id(font_xlarge), id(my_white), "%dd%02dh", (int)(id(print_remaining_time).state / 86400), (int)((id(print_remaining_time).state % 86400) / 3600));
+          it.printf(0, row, id(font_xlarge), id(my_white), "%dd%02dh", (int)(id(print_remaining_time).state / 86400), (int)(((int)id(print_remaining_time).state % 86400) / 3600));
           row += 180;
         }
       }
