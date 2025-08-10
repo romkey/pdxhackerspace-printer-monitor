@@ -172,7 +172,7 @@ sensor:
     pm_10_0:
       name: "Particulate Matter <10.0µm Concentration"  
 
-  - platform: bme680  
+  - platform: bme680
     temperature:
       name: "BME680 Temperature"
       oversampling: 16x
@@ -186,6 +186,7 @@ sensor:
       name: "BME680 Gas Resistance"
     address: 0x76
     update_interval: 60s
+    i2c_id: i2c0
 
   - platform: homeassistant
     name: "Canonical Temperature"
