@@ -13,24 +13,28 @@ blueprint:
     camera_entity:
       name: "Camera Entity (Optional)"
       description: "ESPHome camera entity for taking photos (optional)"
-      required: false
       selector:
         entity:
           domain: camera
+          multiple: false
+          include_entities: []
+          exclude_entities: []
     temperature_sensor:
       name: "Temperature Sensor (Optional)"
       description: "ESPHome temperature sensor entity (optional)"
-      required: false
       selector:
         entity:
           domain: sensor
+          multiple: false
+          include_entities: []
+          exclude_entities: []
     slack_notify_service:
       name: "Slack Notification Service"
       description: "The Slack notification service to use"
       default: notify.slack
       selector:
-        target:
-          service: notify
+        service:
+          domain: notify
     status_update_interval:
       name: "Status Update Interval (minutes)"
       description: "How often to send status updates during printing (in minutes)"
