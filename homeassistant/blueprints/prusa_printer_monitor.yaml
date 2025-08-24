@@ -33,7 +33,7 @@ blueprint:
       description: "The Slack notification service to use"
       default: notify.slack
       selector:
-        text:
+        text: {}
     status_update_interval:
       name: "Status Update Interval (minutes)"
       description: "How often to send status updates during printing (in minutes)"
