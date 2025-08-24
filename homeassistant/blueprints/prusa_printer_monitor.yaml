@@ -1,0 +1,285 @@
+blueprint:
+  name: "Prusa Printer Monitor with Slack Notifications"
+  description: "Monitor Prusa printer state changes and send notifications to Slack with photos"
+  domain: automation
+  source_url: https://github.com/your-repo/prusa-monitor-blueprint
+  input:
+    printer_entity:
+      name: "Prusa Printer Entity"
+      description: "The Prusa printer entity from PrusaLink integration"
+      selector:
+        entity:
+          integration: prusalink
+    camera_entity:
+      name: "Camera Entity (Optional)"
+      description: "ESPHome camera entity for taking photos (optional)"
+      required: false
+      selector:
+        entity:
+          domain: camera
+    temperature_sensor:
+      name: "Temperature Sensor (Optional)"
+      description: "ESPHome temperature sensor entity (optional)"
+      required: false
+      selector:
+        entity:
+          domain: sensor
+    slack_notify_service:
+      name: "Slack Notification Service"
+      description: "The Slack notification service to use"
+      default: notify.slack
+      selector:
+        target:
+          service: notify
+    status_update_interval:
+      name: "Status Update Interval (minutes)"
+      description: "How often to send status updates during printing (in minutes)"
+      default: 15
+      selector:
+        number:
+          min: 5
+          max: 60
+          step: 1
+    unavailable_timeout:
+      name: "Unavailable Timeout (seconds)"
+      description: "How long to wait before considering printer unavailable (prevents spam)"
+      default: 30
+      selector:
+        number:
+          min: 10
+          max: 300
+          step: 5
+    enable_photos:
+      name: "Enable Photo Attachments"
+      description: "Include photos in status and completion notifications"
+      default: true
+      selector:
+        boolean:
+
+trigger:
+  - platform: state
+    entity_id: !input printer_entity
+    id: "printer_state_change"
+  - platform: time_pattern
+    minutes: "*/!input status_update_interval"
+    id: "periodic_status_update"
+
+variables:
+  printer_state: !input printer_entity
+  camera_entity: !input camera_entity
+  temperature_sensor: !input temperature_sensor
+  slack_service: !input slack_notify_service
+  enable_photos: !input enable_photos
+  unavailable_timeout: !input unavailable_timeout
+
+condition:
+  - condition: or
+    conditions:
+      # State change trigger
+      - condition: trigger
+        id: "printer_state_change"
+      # Periodic update trigger (only when printing)
+      - condition: and
+        conditions:
+          - condition: trigger
+            id: "periodic_status_update"
+          - condition: state
+            entity_id: !input printer_entity
+            state: "printing"
+
+action:
+  - choose:
+      # Handle printer becoming unavailable
+      - conditions:
+          - condition: trigger
+            id: "printer_state_change"
+          - condition: state
+            entity_id: !input printer_entity
+            state: "unavailable"
+        sequence:
+          - delay:
+              seconds: !input unavailable_timeout
+          - condition: state
+            entity_id: !input printer_entity
+            state: "unavailable"
+          - service: !input slack_notify_service
+            data:
+              title: "🖨️ Printer Unavailable"
+              message: |
+                The Prusa printer has been unavailable for more than {{ unavailable_timeout }} seconds.
+                
+                **Printer:** {{ printer_state.name }}
+                **Last Known State:** {{ printer_state.attributes.get('state', 'Unknown') }}
+                **Time:** {{ now().strftime('%Y-%m-%d %H:%M:%S') }}
+
+      # Handle printer starting to print
+      - conditions:
+          - condition: trigger
+            id: "printer_state_change"
+          - condition: state
+            entity_id: !input printer_entity
+            state: "printing"
+        sequence:
+          - service: !input slack_notify_service
+            data:
+              title: "🖨️ Print Started"
+              message: |
+                A new print job has started!
+                
+                **Printer:** {{ printer_state.name }}
+                **File:** {{ printer_state.attributes.get('file', {}).get('name', 'Unknown') }}
+                **Progress:** 0%
+                **Time:** {{ now().strftime('%Y-%m-%d %H:%M:%S') }}
+              data:
+                attachments: >-
+                  {% if enable_photos and camera_entity %}
+                  [{
+                    "fallback": "Printer photo",
+                    "image_url": "{{ states(camera_entity).attributes.get('entity_picture', '') }}"
+                  }]
+                  {% endif %}
+
+      # Handle print completion
+      - conditions:
+          - condition: trigger
+            id: "printer_state_change"
+          - condition: state
+            entity_id: !input printer_entity
+            state: "ready"
+          - condition: template
+            value: "{{ printer_state.attributes.get('state', '') == 'finished' }}"
+        sequence:
+          - service: !input slack_notify_service
+            data:
+              title: "✅ Print Completed"
+              message: |
+                Print job completed successfully!
+                
+                **Printer:** {{ printer_state.name }}
+                **File:** {{ printer_state.attributes.get('file', {}).get('name', 'Unknown') }}
+                **Duration:** {{ printer_state.attributes.get('print_duration', 'Unknown') }}
+                **Time:** {{ now().strftime('%Y-%m-%d %H:%M:%S') }}
+              data:
+                attachments: >-
+                  {% if enable_photos and camera_entity %}
+                  [{
+                    "fallback": "Completed print photo",
+                    "image_url": "{{ states(camera_entity).attributes.get('entity_picture', '') }}"
+                  }]
+                  {% endif %}
+
+      # Handle print failure
+      - conditions:
+          - condition: trigger
+            id: "printer_state_change"
+          - condition: state
+            entity_id: !input printer_entity
+            state: "ready"
+          - condition: template
+            value: "{{ printer_state.attributes.get('state', '') == 'error' }}"
+        sequence:
+          - service: !input slack_notify_service
+            data:
+              title: "❌ Print Failed"
+              message: |
+                Print job failed!
+                
+                **Printer:** {{ printer_state.name }}
+                **File:** {{ printer_state.attributes.get('file', {}).get('name', 'Unknown') }}
+                **Error:** {{ printer_state.attributes.get('error', 'Unknown error') }}
+                **Time:** {{ now().strftime('%Y-%m-%d %H:%M:%S') }}
+              data:
+                attachments: >-
+                  {% if enable_photos and camera_entity %}
+                  [{
+                    "fallback": "Failed print photo",
+                    "image_url": "{{ states(camera_entity).attributes.get('entity_picture', '') }}"
+                  }]
+                  {% endif %}
+
+      # Handle print paused
+      - conditions:
+          - condition: trigger
+            id: "printer_state_change"
+          - condition: state
+            entity_id: !input printer_entity
+            state: "paused"
+        sequence:
+          - service: !input slack_notify_service
+            data:
+              title: "⏸️ Print Paused"
+              message: |
+                Print job has been paused.
+                
+                **Printer:** {{ printer_state.name }}
+                **File:** {{ printer_state.attributes.get('file', {}).get('name', 'Unknown') }}
+                **Progress:** {{ printer_state.attributes.get('progress', 0) }}%
+                **Time:** {{ now().strftime('%Y-%m-%d %H:%M:%S') }}
+
+      # Handle print resumed
+      - conditions:
+          - condition: trigger
+            id: "printer_state_change"
+          - condition: state
+            entity_id: !input printer_entity
+            state: "printing"
+          - condition: template
+            value: "{{ printer_state.attributes.get('state', '') == 'printing' and printer_state.attributes.get('progress', 0) > 0 }}"
+        sequence:
+          - service: !input slack_notify_service
+            data:
+              title: "▶️ Print Resumed"
+              message: |
+                Print job has been resumed.
+                
+                **Printer:** {{ printer_state.name }}
+                **File:** {{ printer_state.attributes.get('file', {}).get('name', 'Unknown') }}
+                **Progress:** {{ printer_state.attributes.get('progress', 0) }}%
+                **Time:** {{ now().strftime('%Y-%m-%d %H:%M:%S') }}
+
+      # Handle periodic status updates during printing
+      - conditions:
+          - condition: trigger
+            id: "periodic_status_update"
+          - condition: state
+            entity_id: !input printer_entity
+            state: "printing"
+        sequence:
+          - service: !input slack_notify_service
+            data:
+              title: "📊 Print Status Update"
+              message: |
+                **Printer:** {{ printer_state.name }}
+                **File:** {{ printer_state.attributes.get('file', {}).get('name', 'Unknown') }}
+                **Progress:** {{ printer_state.attributes.get('progress', 0) }}%
+                **Time Remaining:** {{ printer_state.attributes.get('time_remaining', 'Unknown') }}
+                **Print Duration:** {{ printer_state.attributes.get('print_duration', 'Unknown') }}
+                {% if temperature_sensor %}
+                **Temperature:** {{ states(temperature_sensor) }}°C
+                {% endif %}
+                **Time:** {{ now().strftime('%Y-%m-%d %H:%M:%S') }}
+              data:
+                attachments: >-
+                  {% if enable_photos and camera_entity %}
+                  [{
+                    "fallback": "Print progress photo",
+                    "image_url": "{{ states(camera_entity).attributes.get('entity_picture', '') }}"
+                  }]
+                  {% endif %}
+
+    default:
+      # Handle any other state changes
+      - service: !input slack_notify_service
+        data:
+          title: "🔄 Printer State Changed"
+          message: |
+            Printer state has changed.
+            
+            **Printer:** {{ printer_state.name }}
+            **New State:** {{ printer_state.state }}
+            **File:** {{ printer_state.attributes.get('file', {}).get('name', 'Unknown') }}
+            **Progress:** {{ printer_state.attributes.get('progress', 0) }}%
+            **Time:** {{ now().strftime('%Y-%m-%d %H:%M:%S') }}
+
+mode: queued
+max: 10
