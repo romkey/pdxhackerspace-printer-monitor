@@ -8,6 +8,20 @@ It also can use a BME280 or BME680 for environmental (air temperature and humidi
 
 It includes an optional connection to an I2C display or a larger SPI-based RGB display, and can drive an addressable RGB LED strip for lighting.
 
+## Modifying the Xiao S3 Sense
+
+The Xiao S3 Sense has optional D11 and D12 pins. We can use these pins
+to provide PWM signals to control an optional air filter fan, and to
+run optional RGB LEDs on the fan. These signals are run through the
+level shifter to bring them to 5V values.
+
+Because we've run out of pins we need to use D11 and D12. By default
+they're connected to the Xiao camera board's I2S microphone. The board
+needs to be modified as documented
+[here](https://wiki.seeedstudio.com/xiao_esp32s3_pin_multiplexing/#step-1-cut-off-the-connection-between-j1-and-j2).
+Note that this web page incorrectly states the GPIO numbers for D11
+and D12. D11 is actually GPIO42 and D12 is actually GPIO41.
+
 ## PCB
 
 The PCB is designed using KiCAD. Hardware revisions are stored in the hardware directory.
