@@ -4,8 +4,8 @@ esp32:
   flash_size: 8MB
   framework:
     type: arduino
-    version: "latest"
-    platform_version: "6.4.0"
+#    version: "latest"
+#    platform_version: "6.4.0"
 
 psram:
   mode: octal

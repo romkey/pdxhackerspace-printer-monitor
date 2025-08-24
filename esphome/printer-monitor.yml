@@ -48,6 +48,9 @@ font:
     size: 80
   - file: 'fonts/FantasqueSansMono-Regular.ttf'
     id: font_xlarge
+    size: 140
+  - file: 'fonts/FantasqueSansMono-Regular.ttf'
+    id: font_xxlarge
     size: 180
 # https://community.home-assistant.io/t/az-touch-esp-example/383573/22
   - file: 'fonts/MaterialIcons-Regular.ttf'
@@ -123,9 +126,7 @@ esp32_camera:
   external_clock:
     pin: GPIO10
     frequency: 20MHz
-  i2c_pins:
-    sda: GPIO40
-    scl: GPIO39
+  i2c_id: i2c_camera
   data_pins: [GPIO15, GPIO17, GPIO18, GPIO16, GPIO14, GPIO12, GPIO11, GPIO48]
   vsync_pin: GPIO38
   href_pin: GPIO47
@@ -142,8 +143,12 @@ esp32_camera_web_server:
     mode: snapshot
 
 i2c:
-  sda: 2
-  scl: 1
+  - id: i2c0
+    sda: 2
+    scl: 1
+  - id: i2c_camera
+    sda: GPIO40
+    scl: GPIO39
 
 spi:
   miso_pin: GPIO7
@@ -167,7 +172,7 @@ sensor:
     pm_10_0:
       name: "Particulate Matter <10.0µm Concentration"  
 
-  - platform: bme680  
+  - platform: bme680
     temperature:
       name: "BME680 Temperature"
       oversampling: 16x
@@ -181,6 +186,7 @@ sensor:
       name: "BME680 Gas Resistance"
     address: 0x76
     update_interval: 60s
+    i2c_id: i2c0
 
   - platform: homeassistant
     name: "Canonical Temperature"
@@ -360,7 +366,7 @@ display:
       if(!id(wifi_id).is_connected()) {
         it.print(130, 70, id(font_icons_200pt), id(my_red), "\U0000E648");
         return;
-        }
+      }
 
       if(!id(hass).is_connected()) {
         it.print(0, 100, id(font_large), id(my_red), "No HASS");
@@ -370,27 +376,32 @@ display:
       auto row = 0;
       auto time = id(homeassistant_time).now();
 
-      it.print(0, row, id(font_small), id(my_white), "${printer_name}");
+      it.print(0, row, id(font_small), id(my_white), "${printer_name}"); // info on top
       it.printf(200, row, id(font_small), id(my_white), "%02d:%02d:%02d", time.hour, time.minute, time.second);
       it.print(450, row, id(font_icons_small), id(my_white), "\U0000E63E");
       row += 30;
 
-      if(id(print_status).state == "printing") {
-        if(id(print_remaining_time).state < 60)
-          it.printf(0, row, id(font_xlarge), id(my_white), "%d sec", (int)id(print_remaining_time).state);
-        else if(id(print_remaining_time).state < 60*60)
-          it.printf(0, row, id(font_xlarge), id(my_white), "%dm%d", (int)id(print_remaining_time).state / 60, (int) id(print_remaining_time).state % 60);
-        else
-          it.printf(0, row, id(font_xlarge), id(my_white), "%02d:%02d:%02d", id(print_remaining_time).state, (int)id(print_remaining_time).state / 60, (int) id(print_remaining_time).state % 60);
-
-        row += 140;
+      if(id(print_status).state == "printing") { // time remaining for print
+        if(id(print_remaining_time).state < 60) {
+          it.printf(0, row, id(font_xxlarge), id(my_white), "%ds", (int)id(print_remaining_time).state);
+          row += 140;
+        } else if(id(print_remaining_time).state < 3600) {
+          it.printf(0, row, id(font_xxlarge), id(my_white), "%dm%ds", (int)id(print_remaining_time).state / 60, (int)id(print_remaining_time).state % 60);
+          row += 140;
+        } else if(id(print_remaining_time).state < 86400) {
+          it.printf(0, row, id(font_xlarge), id(my_white), "%dh%02dm", (int)(id(print_remaining_time).state / 3600), (int)(((int)id(print_remaining_time).state % 3600) / 60));
+          row += 180;
+        } else {
+          it.printf(0, row, id(font_xlarge), id(my_white), "%dd%02dh", (int)(id(print_remaining_time).state / 86400), (int)(((int)id(print_remaining_time).state % 86400) / 3600));
+          row += 180;
         }
-      if(id(print_status).state == "finished") {
-        it.print(0, row, id(font_xlarge), id(my_white), "DONE");
+      }
+      if(id(print_status).state == "finished") { // finished message
+        it.print(0, row, id(font_xxlarge), id(my_white), "DONE");
         row += 140;
-        }
+      }
 
-      it.printf(0, 240, id(font_large), id(my_white), "%s", id(filament_material).state.c_str());
+      it.printf(0, 240, id(font_large), id(my_white), "%s", id(filament_material).state.c_str()); // print job info
       it.printf(200, 240, id(font_large), id(my_white), "%0.2fmm", id(nozzle_size).state);
 
 button:
