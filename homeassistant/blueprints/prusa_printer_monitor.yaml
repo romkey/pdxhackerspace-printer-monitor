@@ -31,7 +31,7 @@ blueprint:
     slack_notify_service:
       name: "Slack Notification Service"
       description: "The Slack notification service to use"
-      default: notify.slack
+#      default: notify.slack
       selector:
         text: {}
     status_update_interval:
