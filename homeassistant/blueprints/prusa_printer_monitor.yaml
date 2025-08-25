@@ -150,7 +150,7 @@ action:
             entity_id: !input printer_entity
             state: "ready"
           - condition: template
-            value: "{{ printer_state.attributes.get('state', '') == 'finished' }}"
+            value_template: "{{ printer_state.attributes.get('state', '') == 'finished' }}"
         sequence:
           - service: !input slack_notify_service
             data:
@@ -179,7 +179,7 @@ action:
             entity_id: !input printer_entity
             state: "ready"
           - condition: template
-            value: "{{ printer_state.attributes.get('state', '') == 'error' }}"
+            value_template: "{{ printer_state.attributes.get('state', '') == 'error' }}"
         sequence:
           - service: !input slack_notify_service
             data:
@@ -227,7 +227,7 @@ action:
             entity_id: !input printer_entity
             state: "printing"
           - condition: template
-            value: "{{ printer_state.attributes.get('state', '') == 'printing' and printer_state.attributes.get('progress', 0) > 0 }}"
+            value_template: "{{ printer_state.attributes.get('state', '') == 'printing' and printer_state.attributes.get('progress', 0) > 0 }}"
         sequence:
           - service: !input slack_notify_service
             data:
