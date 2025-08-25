@@ -44,6 +44,9 @@ font:
     id: font_small
     size: 20
   - file: 'fonts/FantasqueSansMono-Regular.ttf'
+    id: font_medium
+    size: 50
+  - file: 'fonts/FantasqueSansMono-Regular.ttf'
     id: font_large
     size: 80
   - file: 'fonts/FantasqueSansMono-Regular.ttf'
@@ -382,12 +385,22 @@ display:
       row += 30;
 
       if(id(print_status).state == "printing") { // time remaining for print
-        if(id(print_remaining_time).state < 60) {
+        
+        if(id(print_remaining_time).state == -2147483648) { // remaining time is set to this value when it's unavailable
+          it.printf(0, row, id(font_medium), id(my_white), "Remaining time");
+          row += 70;
+          it.printf(0, row, id(font_medium), id(my_white), "is unavailable");
+          row += 100;
+        } else if(id(print_remaining_time).state < 0) { // sometimes the estimated time is negative when the print is almost done
+          row += 30;
+          it.printf(0, row, id(font_large), id(my_white), "About to finish");
+          row += 210;
+        } else if(id(print_remaining_time).state < 60) {
           it.printf(0, row, id(font_xxlarge), id(my_white), "%ds", (int)id(print_remaining_time).state);
           row += 140;
         } else if(id(print_remaining_time).state < 3600) {
-          it.printf(0, row, id(font_xxlarge), id(my_white), "%dm%ds", (int)id(print_remaining_time).state / 60, (int)id(print_remaining_time).state % 60);
-          row += 140;
+          it.printf(0, row, id(font_xlarge), id(my_white), "%dm%ds", (int)id(print_remaining_time).state / 60, (int)id(print_remaining_time).state % 60);
+          row += 180;
         } else if(id(print_remaining_time).state < 86400) {
           it.printf(0, row, id(font_xlarge), id(my_white), "%dh%02dm", (int)(id(print_remaining_time).state / 3600), (int)(((int)id(print_remaining_time).state % 3600) / 60));
           row += 180;
