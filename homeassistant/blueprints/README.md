@@ -5,7 +5,7 @@ A Home Assistant blueprint for monitoring Prusa printers and sending notificatio
 ## Features
 
 - **State Change Monitoring**: Automatically detects when your printer changes states (printing, paused, completed, failed, etc.)
-- **Periodic Status Updates**: Sends status updates every 15 minutes (configurable) while actively printing
+- **Periodic Status Updates**: Sends status updates at configurable intervals (default: 15 minutes) while actively printing
 - **Slack Integration**: Sends rich notifications to Slack with emojis and formatted messages
 - **Photo Integration**: Optionally includes photos from ESPHome cameras in notifications
 - **Temperature Monitoring**: Includes temperature data from ESPHome sensors (if available)
@@ -36,8 +36,7 @@ A Home Assistant blueprint for monitoring Prusa printers and sending notificatio
 
 - **Camera Entity**: Select your ESPHome camera entity for photo attachments
 - **Temperature Sensor**: Select your ESPHome temperature sensor entity
-- **Status Update Interval**: How often to send status updates during printing (default: 15 minutes)
-- **Unavailable Timeout**: How long to wait before considering printer unavailable (default: 30 seconds)
+- **Status Update Interval**: How often to send status updates during printing (options: 5, 10, 15, 30, or 60 minutes; default: 15 minutes)
 - **Enable Photo Attachments**: Toggle photo attachments on/off (default: true)
 
 ## Notification Types
@@ -54,7 +53,7 @@ A Home Assistant blueprint for monitoring Prusa printers and sending notificatio
 
 ### Periodic Updates
 
-- **📊 Print Status Update**: Sent every 15 minutes (configurable) while printing, including:
+- **📊 Print Status Update**: Sent at configurable intervals (default: 15 minutes) while printing, including:
   - Current progress percentage
   - Time remaining
   - Print duration
@@ -150,3 +149,4 @@ For issues or questions:
 ## License
 
 This blueprint is provided as-is for educational and personal use.
+
