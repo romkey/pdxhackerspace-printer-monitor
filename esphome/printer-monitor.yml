@@ -39,6 +39,10 @@ time:
     id: homeassistant_time
     timezone: ${timezone}
 
+web_server:
+  port: 80
+  version: 3
+
 font:
   - file: 'fonts/FantasqueSansMono-Regular.ttf'
     id: font_small
@@ -324,10 +328,6 @@ light:
           name: Flicker Effect With Custom Values
           alpha: 95%
           intensity: 1.5%
-      - addressable_rainbow:
-          name: Rainbow Effect With Custom Values
-          speed: 10
-          width: 50
       - addressable_color_wipe:
           name: Color Wipe Effect With Custom Values
           colors:
